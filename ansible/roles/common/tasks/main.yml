@@ -1,0 +1,38 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - python3
+      - python3-venv
+      - python3-pip
+      - nginx
+      - supervisor
+    state: present
+
+- name: Download the CloudWatch agent package
+  ansible.builtin.get_url:
+    url: "https://s3.{{ region }}.amazonaws.com/amazoncloudwatch-agent-{{ region }}/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb"
+    dest: /tmp/amazon-cloudwatch-agent.deb
+
+- name: Install the CloudWatch agent package
+  ansible.builtin.apt:
+    deb: /tmp/amazon-cloudwatch-agent.deb
+
+- name: Configure the CloudWatch agent
+  template:
+    src: cw_agent.json.j2
+    dest: /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+    mode: u=rw,g=r,o=r
+  become: true
+
+- name: Start the CloudWatch agent
+  shell: >-
+    /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl
+    -a fetch-config -m ec2 -s
+    -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+  become: true

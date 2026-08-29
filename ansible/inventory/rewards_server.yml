@@ -1,0 +1,24 @@
+rewards_server:
+  vars:
+    service_name: rewards
+    aws_region: eu-west-2
+
+    ansible_user: ubuntu
+    ansible_ssh_private_key_file: rewards_server_deploy_key
+    ansible_ssh_common_args: >-
+      -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+      -o ProxyCommand="aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p --region {{ aws_region }}"
+
+    app_user: rewards
+    app_dir: /opt/rewards
+    app_venv: "{{ app_dir }}/venv"
+    app_port: 8080
+    nginx_port: 80
+
+    nginx_log_group: "/{{ service_name }}/dev/nginx"
+    app_log_group: "/{{ service_name }}/dev/app"
+
+    environment: dev
+
+    commit: ""
+    region: "{{ aws_region }}"

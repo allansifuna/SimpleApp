@@ -1,0 +1,24 @@
+---
+- name: Add the Nginx site
+  template:
+    src: nginx_app.conf.j2
+    dest: /etc/nginx/sites-available/{{ service_name }}.conf
+    mode: u=rw,g=r,o=r
+  become: true
+
+- name: Remove the default Nginx site
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  become: true
+
+- name: Enable the Nginx site
+  file:
+    src: /etc/nginx/sites-available/{{ service_name }}.conf
+    dest: /etc/nginx/sites-enabled/{{ service_name }}.conf
+    state: link
+  become: true
+
+- name: Test and reload Nginx
+  shell: "nginx -t && systemctl reload nginx"
+  become: true
