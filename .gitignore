@@ -6,3 +6,17 @@ env.sh
 ansible/rewards_server_deploy_key
 ansible/*.retry
 *.log
+
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfplan.bin
+crash.log
+override.tf
+override.tf.json
+terraform/envs/dev/plan_output.txt
+
+.DS_Store
+.idea/
+.vscode/
