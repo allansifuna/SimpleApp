@@ -1,0 +1,71 @@
+---
+- name: Make system user for rewards
+  user:
+    name: "{{ app_user }}"
+    system: yes
+    createhome: no
+    shell: /usr/sbin/nologin
+  become: true
+
+- name: Make app and log directories
+  file:
+    name: "{{ item }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: u=rwx,g=rwx,o=rx
+  with_items:
+    - "{{ app_dir }}"
+    - "/var/log/{{ service_name }}"
+  become: true
+
+- name: Copy the app code
+  copy:
+    src: "{{ playbook_dir }}/../{{ item }}"
+    dest: "{{ app_dir }}/{{ item }}"
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: u=rw,g=rw,o=r
+  with_items:
+    - app.py
+    - requirements.txt
+  become: true
+
+- name: Install the venv and dependencies
+  pip:
+    requirements: "{{ app_dir }}/requirements.txt"
+    virtualenv: "{{ app_venv }}"
+    virtualenv_command: python3 -m venv
+  become: true
+  become_user: "{{ app_user }}"
+
+- name: Create env.sh
+  template:
+    src: env.sh.j2
+    dest: "{{ app_dir }}/env.sh"
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: u=rw,g=,o=
+  become: true
+  become_user: "{{ app_user }}"
+
+- name: Check whether the Nginx site is already enabled
+  stat:
+    path: /etc/nginx/sites-enabled/{{ service_name }}.conf
+  register: nginx_site
+
+- name: Configure Nginx
+  include_tasks: nginx.yml
+  when: not nginx_site.stat.exists
+
+- name: Add the Supervisor configs
+  template:
+    src: supervisor_app.conf.j2
+    dest: /etc/supervisor/conf.d/{{ service_name }}.conf
+    mode: u=rw,g=r,o=r
+  become: true
+
+- name: Restart Supervisor managed app
+  shell: "supervisorctl reread && supervisorctl update && supervisorctl restart {{ service_name }}:*"
+  become: true
+

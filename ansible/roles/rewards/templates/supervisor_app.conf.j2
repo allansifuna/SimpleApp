@@ -1,0 +1,13 @@
+[program:{{ service_name }}]
+directory={{ app_dir }}
+command=/bin/bash -lc 'source {{ app_dir }}/env.sh && exec {{ app_venv }}/bin/python {{ app_dir }}/app.py'
+user={{ app_user }}
+autostart=true
+autorestart=true
+startretries=3
+stopasgroup=true
+killasgroup=true
+stdout_logfile=/var/log/{{ service_name }}/app.log
+stdout_logfile_maxbytes=10MB
+stdout_logfile_backups=3
+redirect_stderr=true

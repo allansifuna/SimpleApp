@@ -1,0 +1,9 @@
+---
+- name: Configure the rewards dev web tier
+  hosts: rewards_server
+  become: true
+  gather_facts: true
+
+  roles:
+    - common
+    - rewards
