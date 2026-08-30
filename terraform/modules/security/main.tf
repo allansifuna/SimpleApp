@@ -27,7 +27,7 @@ resource "aws_security_group" "alb" {
 # EC2 security group
 resource "aws_security_group" "ec2" {
   name        = "${var.project_name}-${var.environment}-ec2-sg"
-  description = "App servers for ${var.project_name} ${var.environment} — reachable only from the ALB"
+  description = "App servers for ${var.project_name} ${var.environment}, reachable only from the ALB"
   vpc_id      = var.vpc_id
 
   ingress {
