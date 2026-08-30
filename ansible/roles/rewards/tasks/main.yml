@@ -39,6 +39,11 @@
   become: true
   become_user: "{{ app_user }}"
 
+- name: Read APP_SECRET from the environment
+  set_fact:
+    app_secret: "{{ lookup('env', 'APP_SECRET') }}"
+  no_log: true
+
 - name: Create env.sh
   template:
     src: env.sh.j2
