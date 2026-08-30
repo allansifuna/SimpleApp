@@ -1,0 +1,67 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+    paths: ["app.py", "requirements.txt", "ansible/**"]
+  workflow_dispatch: {}
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: "eu-west-2"
+  TF_DIR: terraform/envs/dev
+  ANSIBLE_DIR: ansible
+
+jobs:
+  ansible-deploy:
+    name: ansible deploy (dev)
+    runs-on: ubuntu-latest
+    environment: dev-apply
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assume the apply/deploy role via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.5"
+
+      - name: Fill in the inventory hosts from Terraform state
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          terraform init -input=false
+          HOSTS_FILE="$GITHUB_WORKSPACE/${{ env.ANSIBLE_DIR }}/inventory/rewards_server.yml"
+          HOSTS_JSON=$(terraform output -json instance_ids | jq -c '[.[] | {(.): {ansible_host: .}}] | add')
+          yq -i ".rewards_server.hosts = ${HOSTS_JSON}" "$HOSTS_FILE"
+
+      - name: Write the deploy private key
+        run: |
+          umask 077
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > "$GITHUB_WORKSPACE/${{ env.ANSIBLE_DIR }}/rewards_server_deploy_key"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible
+        run: pip install --disable-pip-version-check ansible-core
+
+      - name: Install the SSM Session Manager plugin
+        run: |
+          curl -sL "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o /tmp/smp.deb
+          sudo dpkg -i /tmp/smp.deb
+
+      - name: Run the playbook
+        working-directory: ${{ env.ANSIBLE_DIR }}
+        env:
+          APP_SECRET: ${{ secrets.APP_SECRET }}
+        run: |
+          ansible-playbook playbook.yml \
+            --extra-vars "commit=${GITHUB_SHA::7} region=${{ env.AWS_REGION }}"
