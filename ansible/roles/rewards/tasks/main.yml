@@ -52,7 +52,6 @@
     group: "{{ app_user }}"
     mode: u=rw,g=,o=
   become: true
-  become_user: "{{ app_user }}"
 
 - name: Check whether the Nginx site is already enabled
   stat:
