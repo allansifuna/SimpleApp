@@ -31,8 +31,6 @@ module "iam" {
   project_name   = local.project_name
   environment    = local.environment
   log_group_arns = module.logging.log_group_arns
-  github_account = local.owner
-  github_repo    = var.github_repo
 }
 
 module "compute" {
