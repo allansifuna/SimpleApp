@@ -4,6 +4,7 @@ env.sh
 *.pyc
 
 ansible/rewards_server_deploy_key
+ansible/rewards_server_deploy_key.pub
 ansible/*.retry
 *.log
 
