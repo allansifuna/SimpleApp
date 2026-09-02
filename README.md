@@ -7,6 +7,7 @@ A small Flask service. Runs on EC2 behind an ALB.
 | Menu item | Link/URL |
 |---|---|
 | Live health check | http://rewards-dev-alb-1269306359.eu-west-2.elb.amazonaws.com/healthz |
+| Demo video | [Loom](https://www.loom.com/share/b4cf00e99130412893e42e6d12e48262) ([backup](https://drive.google.com/file/d/1dJ1hBPHMnDqv-UUm-Eau2THRx3eOaTCn/view?usp=sharing)) |
 | Stack | [Stack](#stack) |
 | Cloud Architecture | [Cloud Architecture](#cloud-architecture) |
 | Run the app locally | [Run the app locally](#run-the-app-locally) |
